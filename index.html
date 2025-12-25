@@ -5,22 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SINTELIA Pulse — DOGE/EUR</title>
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
 <style>
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
-  .wrap{max-width:520px;margin:auto;padding:14px}
-  .top{display:flex;justify-content:space-between;align-items:center}
-  .state{font-size:34px;font-weight:800;padding:14px;border-radius:16px;margin-top:14px}
-  .hold{background:#fff8e6;border:1px solid #f2ddaa}
-  .go{background:#e9fbef;border:1px solid #bfeccc}
-  .nogo{background:#ffecec;border:1px solid #f0b5b5}
-  .card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-  .box{border:1px solid #eee;border-radius:12px;padding:10px}
-  small{opacity:.6}
-  pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:260px;overflow:auto}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
+.wrap{max-width:520px;margin:auto;padding:14px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.state{font-size:32px;font-weight:800;padding:14px;border-radius:16px;margin-top:12px;text-align:center}
+.hold{background:#fff8e6;border:1px solid #f2ddaa}
+.go{background:#e9fbef;border:1px solid #bfeccc}
+.nogo{background:#ffecec;border:1px solid #f0b5b5}
+
+.signal{font-size:22px;font-weight:700;text-align:center;margin-top:8px}
+
+.card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
+.bar{height:12px;background:#eee;border-radius:8px;overflow:hidden;margin-top:6px}
+.fill{height:100%;width:0%;background:#1a8f3a;transition:width .3s}
+
+.mode{margin-top:10px;text-align:center}
+button{padding:6px 12px;border-radius:10px;border:1px solid #ccc;background:#fafafa}
+
+pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:240px;overflow:auto}
 </style>
 </head>
 
@@ -32,156 +35,136 @@
   </div>
 
   <div id="state" class="state hold">HOLD</div>
-  
-<div id="signal" style="
-  margin-top:10px;
-  font-size:22px;
-  font-weight:700;
-  text-align:center;
-">
-  → WAIT
-</div>
+  <div id="signal" class="signal">→ WAIT</div>
 
   <div class="card">
     <div><b id="price">€ —</b></div>
-    <small id="spread">spread —</small>
 
-    <div class="grid">
-      <div class="box">Spread z<br><b id="zs">•</b></div>
-      <div class="box">Price z<br><b id="zr">•</b></div>
-      <div class="box">Volume z<br><b id="zv">•</b></div>
+    <div class="bar"><div id="confFill" class="fill"></div></div>
+    <small>Confidence</small>
+
+    <div class="mode">
+      Mode:
+      <button onclick="setMode('calm')">Calm</button>
+      <button onclick="setMode('fast')">Fast</button>
+      <div id="modeLabel">calm</div>
     </div>
 
-    <details style="margin-top:10px" open>
-      <summary>Details</summary>
+    <details open style="margin-top:10px">
+      <summary>Log</summary>
       <pre id="log"></pre>
     </details>
   </div>
 </div>
 
 <script>
-/**
- * ✅ SET THIS to your Cloudflare Worker URL that returns JSON:
- * {"price":..., "spread":..., ...}
- */
+"use strict";
+
+/* ===== CONFIG ===== */
 const API = "https://patient-hill-56b3.fuffy1603.workers.dev/";
+let MODE = "calm";
 
-// ---------- UI helpers ----------
-function logLine(t){
-  const el = document.getElementById("log");
-  const ts = new Date().toISOString().slice(11,19);
-  el.textContent += `[${ts}] ${t}\n`;
-  el.scrollTop = el.scrollHeight;
-}
+/* ===== STATE ===== */
+let prices = [];
+let lastState = "HOLD";
+let lastChange = 0;
+let lastBeep = 0;
+let audioReady = false;
+
+/* ===== AUDIO ===== */
+const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+document.body.addEventListener("click",()=>audioReady=true);
+
+/* ===== UI HELPERS ===== */
+function setConn(t){ document.getElementById("conn").textContent=t; }
 function setState(s){
-  const el = document.getElementById("state");
-  el.className = "state " + (s==="GO"?"go":s==="NO-GO"?"nogo":"hold");
-  el.textContent = s;
+  const el=document.getElementById("state");
+  el.className="state "+(s==="GO"?"go":s==="NO-GO"?"nogo":"hold");
+  el.textContent=s;
 }
-function setConn(t){
-  document.getElementById("conn").textContent = t;
+function setSignal(s){
+  const el=document.getElementById("signal");
+  if(s==="GO"){el.textContent="↑ BUY";el.style.color="#1a8f3a";}
+  else if(s==="NO-GO"){el.textContent="↓ NO";el.style.color="#c0352b";}
+  else{el.textContent="→ WAIT";el.style.color="#777";}
 }
-function setSignal(state){
-  const el = document.getElementById("signal");
-  if (state === "GO") {
-    el.textContent = "↑ BUY";
-    el.style.color = "#1a8f3a";
-  } else if (state === "NO-GO") {
-    el.textContent = "↓ NO";
-    el.style.color = "#c0352b";
-  } else {
-    el.textContent = "→ WAIT";
-    el.style.color = "#777";
-  }
+function log(t){
+  const el=document.getElementById("log");
+  const ts=new Date().toISOString().slice(11,19);
+  el.textContent+=`[${ts}] ${t}\n`;
+  el.scrollTop=el.scrollHeight;
+}
+function setMode(m){
+  MODE=m;
+  document.getElementById("modeLabel").textContent=m;
+  log("mode="+m);
 }
 
-// ---------- OPS v1 (minimal, real) ----------
-const W = 60;          // seconds window
-const prices = [];     // [t, price]
-
+/* ===== OPS ENGINE ===== */
 function ops(price){
-  const now = Date.now();
-  prices.push([now, price]);
+  const now=Date.now();
+  prices.push([now,price]);
+  const W=MODE==="fast"?30:60;
 
-  // keep last W seconds
-  while (prices.length && now - prices[0][0] > W*1000) prices.shift();
+  while(prices.length && now-prices[0][0]>W*1000) prices.shift();
+  if(prices.length<6) return {state:"HOLD",conf:0};
 
-  // warm-up
-  if (prices.length < 6) return { state: "HOLD", ret: null, vol: null };
+  const p0=prices[0][1];
+  const p1=prices[prices.length-1][1];
+  const ret=(p1-p0)/p0;
 
-  const p0 = prices[0][1];
-  const p1 = prices[prices.length - 1][1];
-  const ret = (p1 - p0) / p0;
+  let vol=0;
+  for(let i=1;i<prices.length;i++) vol+=Math.abs(prices[i][1]-prices[i-1][1]);
+  vol/=prices.length;
 
-  // simple noise proxy: mean abs step
-  let vol = 0;
-  for (let i = 1; i < prices.length; i++){
-    vol += Math.abs(prices[i][1] - prices[i-1][1]);
-  }
-  vol /= prices.length;
+  const retThr=MODE==="fast"?0.0005:0.0007;
+  const noiseThr=p1*(MODE==="fast"?0.001:0.0008);
 
-  // conservative thresholds
-  const goRet = 0.0007;  // +0.07%
-  const maxNoise = p1 * 0.0008;      // noise must be small vs price
+  let conf=Math.max(0,Math.min(1,(ret/retThr)*(1-vol/noiseThr)));
 
-  if (ret > goRet && vol < maxNoise) return { state: "GO", ret, vol };
-  if (ret < -goRet)                  return { state: "NO-GO", ret, vol };
-  return { state: "HOLD", ret, vol };
+  if(ret>retThr && vol<noiseThr) return {state:"GO",conf};
+  if(ret<-retThr) return {state:"NO-GO",conf:0};
+  return {state:"HOLD",conf};
 }
 
-// ---------- Polling ----------
-let lastOk = 0;
+/* ===== POLL ===== */
+let lastGood=0;
 
 async function poll(){
   try{
-    // IMPORTANT: do not assume API is JSON if status not OK
-    const r = await fetch(API, { cache: "no-store" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const r=await fetch(API,{cache:"no-store"});
+    const d=await r.json();
+    const price=Number(d.price);
+    if(!Number.isFinite(price)) throw "bad price";
 
-    const d = await r.json();
+    document.getElementById("price").textContent="€ "+price.toFixed(6);
+    setConn("LIVE"); lastGood=Date.now();
 
-    // Validate numeric price
-    const price = Number(d.price);
-    if (!Number.isFinite(price)) throw new Error("bad price");
+    const out=ops(price);
+    let s=out.state;
+    const now=Date.now();
 
-    const spread = Number(d.spread);
-    const spreadOk = Number.isFinite(spread) ? spread : 0;
+    if(s!==lastState && now-lastChange<8000) s=lastState;
+    if(s!==lastState){lastState=s;lastChange=now;}
 
-    setConn("LIVE");
-    lastGood = Date.now();
+    setState(s); setSignal(s);
 
-    document.getElementById("price").textContent = "€ " + price.toFixed(6);
-    document.getElementById("spread").textContent = "spread " + spreadOk.toFixed(6);
+    const confPct=Math.round(out.conf*100);
+    document.getElementById("confFill").style.width=confPct+"%";
 
-    const out = ops(price);
-    setState(out.state);
+    if(s==="GO" && audioReady && now-lastBeep>30000){
+      audio.play().catch(()=>{});
+      lastBeep=now;
+      log(`GO @ €${price.toFixed(6)} conf=${confPct}%`);
+    }
 
-    // We haven’t implemented z-scores yet; keep placeholders stable
-    document.getElementById("zs").textContent = "•";
-    document.getElementById("zr").textContent = "•";
-    document.getElementById("zv").textContent = "•";
-
-    // Log compact diagnostics
-    const retTxt = (out.ret==null) ? "warm" : (out.ret*100).toFixed(3) + "%";
-    const volTxt = (out.vol==null) ? "warm" : out.vol.toExponential(2);
-    logLine(`ok price=${price.toFixed(6)} spread=${spreadOk.toFixed(6)} state=${out.state} ret=${retTxt} vol=${volTxt}`);
-
-  } catch(e){
-    // If we were live recently, show RECONNECTING but do not erase last price
-    if (Date.now() - lastGood > 5000) {
-  setConn("RECONNECTING");
-}
-
-    logLine(`err ${String(e)}`);
-    // keep state as HOLD on errors
-    setState("HOLD");
+  }catch(e){
+    if(Date.now()-lastGood>5000) setConn("RECONNECTING");
   }
 }
 
-// poll once per second
-setInterval(poll, 1000);
+setInterval(poll,1000);
 poll();
 </script>
-
 </body>
 </html>

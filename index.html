@@ -3,75 +3,123 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>SINTELIA Pulse — OPS + AXIOM A (ARM→GO, Multi-Venue, GO Audit Overlay)</title>
+<title>SINTELIA Pulse — OPS + AXIOM A (CLEAN • ARM→GO • Multi-Venue • Audit)</title>
+
 <style>
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
-  .wrap{max-width:560px;margin:auto;padding:14px}
-  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-  .state{font-size:30px;font-weight:900;padding:14px;border-radius:16px;margin-top:12px;text-align:center}
-  .hold{background:#fff8e6;border:1px solid #f2ddaa}
-  .arm{background:#eef3ff;border:1px solid #c7d6ff}
-  .go{background:#e9fbef;border:1px solid #bfeccc}
-  .nogo{background:#ffecec;border:1px solid #f0b5b5}
-  .sub{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
-  .pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid #eee;background:#fafafa}
-  .signal{text-align:center;font-size:18px;font-weight:900;margin-top:6px}
-  .timer{text-align:center;font-size:12px;opacity:.78;margin-top:6px;line-height:1.25}
-  .card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
+  :root{
+    --bg:#ffffff; --fg:#111; --muted:rgba(0,0,0,.65);
+    --card:#fff; --line:#e9e9e9; --soft:#fafafa;
+    --hold:#fff8e6; --holdb:#f2ddaa;
+    --arm:#eef3ff;  --armb:#c7d6ff;
+    --go:#e9fbef;   --gob:#bfeccc;
+    --bad:#ffecec;  --badb:#f0b5b5;
+    --green:#1a8f3a;
+  }
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--fg)}
+  .wrap{max-width:640px;margin:auto;padding:14px}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .title b{font-size:15px}
+  .title small{opacity:.75}
+  .conn{font-weight:900}
+  .state{font-size:32px;font-weight:1000;padding:16px;border-radius:18px;margin-top:12px;text-align:center}
+  .hold{background:var(--hold);border:1px solid var(--holdb)}
+  .arm{background:var(--arm);border:1px solid var(--armb)}
+  .go{background:var(--go);border:1px solid var(--gob)}
+  .nogo{background:var(--bad);border:1px solid var(--badb)}
+  .sub{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:900}
+  .signal{text-align:center;font-size:18px;font-weight:1000;margin-top:6px}
+  .timer{text-align:center;font-size:12px;opacity:.82;margin-top:6px;line-height:1.3}
+  .card{border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px;background:var(--card)}
   .bar{height:12px;background:#eee;border-radius:8px;overflow:hidden;position:relative;margin-top:8px}
-  .fill{height:100%;width:0%;background:#1a8f3a;transition:width .25s}
+  .fill{height:100%;width:0%;background:var(--green);transition:width .25s}
   .confText{position:absolute;top:-18px;right:0;font-size:12px;opacity:.7}
   .row{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;opacity:.75}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
-  .box{border:1px solid #eee;border-radius:12px;padding:10px}
+  .box{border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}
   .k{font-size:12px;opacity:.65}
-  .v{font-size:16px;font-weight:900;margin-top:4px}
-  canvas{width:100%;height:140px;margin-top:10px;border-radius:10px;background:#fafafa;border:1px solid #eee}
+  .v{font-size:16px;font-weight:1000;margin-top:4px}
+  canvas{width:100%;height:160px;margin-top:10px;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
   .mode{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:12px;flex-wrap:wrap}
-  button,select,input{padding:6px 10px;border-radius:10px;border:1px solid #ccc;background:#fff;font-weight:800}
-  button{background:#fafafa;cursor:pointer}
+  button,select,input{padding:6px 10px;border-radius:10px;border:1px solid #ccc;background:#fff;font-weight:900}
+  button{background:var(--soft);cursor:pointer}
   button.active{background:#111;color:#fff;border-color:#111}
-  pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:220px;overflow:auto}
+  pre{font-size:11px;background:var(--soft);border:1px solid var(--line);padding:10px;border-radius:12px;max-height:200px;overflow:auto}
   small{opacity:.78}
-  .badge{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #eee;background:#fafafa;font-weight:900}
-  .err{color:#b00020;font-weight:900}
-  .ok{color:#1a8f3a;font-weight:900}
+  .badge{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:1000}
+  .ok{color:var(--green);font-weight:1000}
+  .err{color:#b00020;font-weight:1000}
+  details summary{cursor:pointer}
 
-  /* Radar */
-  #radar{position:fixed;right:10px;top:72px;width:230px;background:#fff;border:1px solid #eee;border-radius:14px;padding:10px;box-shadow:0 2px 10px rgba(0,0,0,.04);z-index:9999}
-  #radar h4{margin:0 0 8px 0;font-size:12px;opacity:.85}
+  /* LEFT: GO events (audit) */
+  #goLog{
+    position:fixed;left:10px;top:72px;width:260px;max-height:75vh;overflow:auto;
+    background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;z-index:9999;
+    box-shadow:0 2px 10px rgba(0,0,0,.05)
+  }
+  #goLog h4{margin:0 0 8px 0;font-size:12px;opacity:.9}
+  #goList{margin:0;padding:0}
+  #goList li{
+    list-style:none;padding:8px;border-radius:12px;margin-bottom:6px;cursor:pointer;
+    border:1px solid #e6e6e6;background:#f6fff9;display:grid;grid-template-columns:1fr auto;row-gap:2px
+  }
+  #goList li:hover{background:#e9fbef}
+  #goList li small{opacity:.7}
+  #goLog .hint{font-size:11px;opacity:.72;line-height:1.2}
+
+  /* RIGHT: Radar */
+  #radar{
+    position:fixed;right:10px;top:72px;width:240px;background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:10px;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,.05)
+  }
+  #radarHead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  #radar h4{margin:0;font-size:12px;opacity:.9}
   #coinList{margin:0;padding:0;max-height:62vh;overflow:auto}
-  #coinList li{list-style:none;padding:8px 8px;border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid #eee;background:#fafafa;display:grid;grid-template-columns:1fr auto;row-gap:2px}
-  #coinList li small{opacity:.72;font-weight:900}
+  #coinList li{
+    list-style:none;padding:8px;border-radius:12px;margin-bottom:6px;cursor:pointer;
+    border:1px solid var(--line);background:var(--soft);
+    display:grid;grid-template-columns:1fr auto;row-gap:2px
+  }
   #coinList li.hot{background:#e9fbef;border-color:#bfeccc}
   #coinList li.warm{background:#fff8e6;border-color:#f2ddaa}
   #coinList li.sel{outline:2px solid #111}
+  #coinList li small{opacity:.72;font-weight:1000}
 </style>
 </head>
 
 <body>
 
+<!-- LEFT GO LOG -->
+<div id="goLog">
+  <h4>GO Events (Audit)</h4>
+  <ul id="goList"></ul>
+  <div class="hint">Κλικ σε event → πάει στο coin. <br>Το GO δεν λέει “αγόρασε”. Λέει: «αν θες, τώρα έχει νόημα να το σκεφτείς».</div>
+</div>
+
+<!-- RIGHT RADAR -->
 <div id="radar">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-    <h4 style="margin:0">Radar (ARM proximity)</h4>
+  <div id="radarHead">
+    <h4>Radar (ARM proximity)</h4>
     <div id="scanBadge" class="badge">SCAN: OFF</div>
   </div>
   <ul id="coinList"></ul>
-  <div style="font-size:11px;opacity:.7;margin-top:6px;line-height:1.2">
-    Πράσινο = “ωρίμανση” προς ARM (score + ⏱ χρόνο ≥ warm).
-  </div>
+  <div class="hint">Πράσινο = score + ⏱ χρόνο ≥ warm.</div>
 </div>
 
 <div class="wrap">
   <div class="top">
-    <div>
+    <div class="title">
       <b>SINTELIA Pulse</b><br />
       <small id="subline">Multi-venue: Coinbase + Kraken (via Worker)</small>
     </div>
+
     <div>
-      <div id="conn">CONNECTING</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="conn" class="conn">CONNECTING</div>
+        <span id="health" class="badge">health: —</span>
+      </div>
       <div style="margin-top:6px;display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap">
-        <input id="apiInput" style="width:280px" placeholder="Worker base URL (no trailing slash)" />
+        <input id="apiInput" style="width:290px" placeholder="Worker base URL (no trailing slash)" />
         <button id="btnApplyApi">Apply</button>
         <button id="btnTestApi">Test</button>
       </div>
@@ -104,7 +152,7 @@
       <div>Max: <b id="maxP">—</b></div>
     </div>
 
-    <canvas id="chart" width="560" height="140"></canvas>
+    <canvas id="chart" width="640" height="160"></canvas>
 
     <div class="grid">
       <div class="box"><div class="k">Momentum</div><div id="momV" class="v">—</div><div class="k" id="momK">—</div></div>
@@ -126,6 +174,10 @@
       </select>
 
       <button id="btnOverlay" class="active" title="GO lines + enter-window shading">GO Overlay: ON</button>
+
+      <button id="btnExportCSV">Export CSV</button>
+      <button id="btnExportJSON">Export JSON</button>
+      <button id="btnClearAudit" title="Clear audit events (local)">Clear Audit</button>
     </div>
 
     <details open style="margin-top:12px">
@@ -139,8 +191,16 @@
 <script>
 "use strict";
 
-/* ===== API (Worker) ===== */
-let API = localStorage.getItem("SINTELIA_API") || "https://patient-hill-56b3.fuffy1603.workers.dev";
+/* =========================
+   STORAGE KEYS
+========================= */
+const K_API   = "SINTELIA_API";
+const K_GOLOG = "SINTELIA_GOLOG_V1";
+
+/* =========================
+   API (Worker)
+========================= */
+let API = localStorage.getItem(K_API) || "https://patient-hill-56b3.fuffy1603.workers.dev";
 const apiInput = document.getElementById("apiInput");
 apiInput.value = API;
 function normalizeApi(u){
@@ -149,103 +209,121 @@ function normalizeApi(u){
   return u;
 }
 
-/* ===== Universe ===== */
-/* Keep the UI list modest; Worker fallback expands quotes automatically.
-   Add more here whenever you want more coins in Radar/Dropdown. */
+/* =========================
+   UNIVERSE (coins)
+========================= */
 const COINS = [
   "BTC-EUR","ETH-EUR","SOL-EUR","XRP-EUR",
   "ADA-EUR","AVAX-EUR","LINK-EUR","DOT-EUR",
   "LTC-EUR","DOGE-EUR"];
 
-/* ===== Timing ===== */
+/* =========================
+   TIMING
+========================= */
 const POLL_MS = 1000;
-const SCAN_TICK_MS = 1500;
+const SCAN_TICK_MS = 1600;
 
-/* ===== Windows ===== */
+/* =========================
+   WINDOWS
+========================= */
 const PROJ_W = [5, 15, 60, 180];
-const CHART_W_SEC = 180;           // show longer continuity
+const CHART_W_SEC = 180;
 const KEEP_SEC = Math.max(CHART_W_SEC, Math.max(...PROJ_W) + 30);
 
-/* ===== ARM/GO thresholds ===== */
+/* =========================
+   ARM/GO thresholds
+========================= */
 const WARM = 0.55;
-const HOT = 0.78;
+const HOT  = 0.78;
 
-const MIN_DWELL_ENTER_ARM_MS = 4000;
-const MIN_DWELL_ENTER_GO_MS  = 14000; // stricter GO
+const MIN_DWELL_ENTER_ARM_MS = 4500;
+const MIN_DWELL_ENTER_GO_MS  = 16000;
 const MIN_DWELL_EXIT_GO_MS   = 1500;
 
-const PASS_PERSIST_MS_CALM = 16000;
-const PASS_PERSIST_MS_FAST = 24000;
+const PASS_PERSIST_MS_CALM = 18000;
+const PASS_PERSIST_MS_FAST = 26000;
 
 const FALSE_GO_WINDOW_MS = 9000;
 const PENALTY_MS = 90000;
 
-/* ===== Enter window shading duration for audit (visual) ===== */
-const ENTER_WINDOW_MS = 60000; // 60s shaded region after each GO event
+/* Enter window shading duration (visual + audit) */
+const ENTER_WINDOW_MS = 60000;
 
-/* ===== UI helpers ===== */
+/* =========================
+   UI refs
+========================= */
 const el = (id)=>document.getElementById(id);
 const logEl = el("log");
-function log(t){
-  const ts=new Date().toISOString().slice(11,19);
-  logEl.textContent += `[${ts}] ${t}\n`;
-  logEl.scrollTop=logEl.scrollHeight;
-}
-function setConn(t){ el("conn").textContent=t; }
-function setConf(p){
-  p=Math.max(0,Math.min(100,p));
-  el("confFill").style.width=p+"%";
-  el("confText").textContent=p+"%";
-}
-function symShort(s){ return s.replace("-EUR",""); }
+const goListEl = el("goList");
+const coinListEl = el("coinList");
 
-/* ===== Core message (must appear) ===== */
+function log(t){
+  const ts = new Date().toISOString().slice(11,19);
+  logEl.textContent += `[${ts}] ${t}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function setConn(t){ el("conn").textContent = t; }
+function symShort(s){ return s.replace("-EUR",""); }
+function setConf(p){
+  p = Math.max(0,Math.min(100,p));
+  el("confFill").style.width = p+"%";
+  el("confText").textContent = p+"%";
+}
+
+/* Required message in UI */
 const GO_MSG_HTML = `Το GO δεν λέει “αγόρασε”.<br>Λέει:<br>«Αν θες να αγοράσεις, ΤΩΡΑ έχει νόημα να το σκεφτείς.»`;
 
-/* ===== Controls ===== */
+/* =========================
+   Controls
+========================= */
 let QUIET=false, MODE="auto", REGIME="calm", SCAN=false;
 let OVERLAY_ON = true;
 
 el("btnQuiet").onclick=()=>{
   QUIET=!QUIET;
-  el("btnQuiet").textContent=`Quiet: ${QUIET?"ON":"OFF"}`;
+  el("btnQuiet").textContent = `Quiet: ${QUIET?"ON":"OFF"}`;
 };
 el("modeSel").onchange=()=>{
-  MODE=el("modeSel").value;
+  MODE = el("modeSel").value;
   log("mode="+MODE);
 };
 el("btnScan").onclick=()=>{
   SCAN=!SCAN;
   el("btnScan").classList.toggle("active",SCAN);
-  el("btnScan").textContent=`Scan: ${SCAN?"ON":"OFF"}`;
-  el("scanBadge").textContent=`SCAN: ${SCAN?"ON":"OFF"}`;
+  el("btnScan").textContent = `Scan: ${SCAN?"ON":"OFF"}`;
+  el("scanBadge").textContent = `SCAN: ${SCAN?"ON":"OFF"}`;
   log("scan="+SCAN);
 };
 el("btnOverlay").onclick=()=>{
   OVERLAY_ON = !OVERLAY_ON;
   el("btnOverlay").classList.toggle("active", OVERLAY_ON);
   el("btnOverlay").textContent = `GO Overlay: ${OVERLAY_ON ? "ON" : "OFF"}`;
-  drawChart(Date.now()); // immediate redraw
+  drawChart(Date.now());
 };
 
 el("btnApplyApi").onclick=()=>{
-  const v=normalizeApi(apiInput.value);
+  const v = normalizeApi(apiInput.value);
   if(!v) return;
-  API=v; localStorage.setItem("SINTELIA_API",API);
+  API = v;
+  localStorage.setItem(K_API, API);
   log("API="+API);
 };
 el("btnTestApi").onclick=async()=>{
   try{
-    const j = await fetchJson(normalizeApi(API)+"/health");
-    el("diag").innerHTML = `<span class="ok">HEALTH OK</span> <small>${API}</small>`;
+    await fetchJson(normalizeApi(API)+"/health");
+    el("health").textContent = "health: OK";
+    el("health").className = "badge";
     log("health ok");
   }catch(e){
-    el("diag").innerHTML = `<span class="err">HEALTH FAIL: ${String(e).slice(0,160)}</span>`;
+    el("health").textContent = "health: FAIL";
+    el("health").className = "badge";
     log("health fail: "+String(e).slice(0,140));
   }
 };
 
-/* ===== Fetch ===== */
+/* =========================
+   Fetch helpers
+========================= */
 async function fetchJson(url){
   const r = await fetch(url, { cache:"no-store" });
   const txt = await r.text();
@@ -259,7 +337,9 @@ async function fetchBundle(symbol){
   return await fetchJson(url);
 }
 
-/* ===== Memory per coin (per venue) + GO audit events ===== */
+/* =========================
+   Per-coin state
+========================= */
 function makeCoin(){
   return {
     cb: { samples: [] },   // [t, price]
@@ -267,6 +347,7 @@ function makeCoin(){
     merged: { samples: [] },
 
     lastGood: 0,
+
     lastState: "HOLD",
     lastChange: 0,
 
@@ -280,29 +361,52 @@ function makeCoin(){
 
     penaltyUntil: 0,
 
-    // --- Audit overlays ---
-    goEvents: [],     // {t, price, quote, bestVenue}
-    winEvents: [],    // {t0, t1} (enter windows)
-    maxEvents: 200
+    // Audit overlays per coin
+    goEvents: [],     // {id,t,price,symbol,mode,regime,conf,passStreakSec,venues,quote,bestVenue, penaltyTriggered:false}
+    winEvents: [],    // {t0,t1,id}
+    maxEvents: 250
   };
 }
 const coinState = Object.fromEntries(COINS.map(c=>[c, makeCoin()]));
+
+/* =========================
+   Global GO log (persists)
+========================= */
+let globalGoLog = [];
+try{
+  const raw = localStorage.getItem(K_GOLOG);
+  if(raw) globalGoLog = JSON.parse(raw) || [];
+}catch{}
+function saveGoLog(){
+  localStorage.setItem(K_GOLOG, JSON.stringify(globalGoLog.slice(0,500)));
+}
+function clearAudit(){
+  globalGoLog = [];
+  saveGoLog();
+  for(const c of COINS){
+    coinState[c].goEvents = [];
+    coinState[c].winEvents = [];
+  }
+  renderGoList();
+  drawChart(Date.now());
+  log("audit cleared");
+}
+el("btnClearAudit").onclick=()=>clearAudit();
+
+/* =========================
+   Active symbol
+========================= */
 let SYMBOL = COINS[0];
 let S = coinState[SYMBOL];
 
-/* ===== Radar memory (score + warm time continues while ≥ warm) ===== */
-const radarMem = Object.fromEntries(COINS.map(c=>[c,{score:0, warmMs:0, lastTick:0}]));
-function updateRadarItem(sym){
-  const li = document.getElementById("rad_"+sym);
-  if(!li) return;
-  const m = radarMem[sym];
-  li.classList.toggle("hot", m.score>=HOT);
-  li.classList.toggle("warm", m.score>=WARM);
-  li.classList.toggle("sel", sym===SYMBOL);
-  li.innerHTML = `<b>${symShort(sym)}</b><small>${Math.round(m.score*100)}% ⏱ ${Math.floor(m.warmMs/1000)}s</small>`;
-}
+/* =========================
+   Radar memory
+========================= */
+const radarMem = Object.fromEntries(COINS.map(c=>[c,{score:0,warmMs:0,lastTick:0}]));
 
-/* ===== UI init ===== */
+/* =========================
+   UI init
+========================= */
 (function initUI(){
   // dropdown
   const sel = el("symbolSel");
@@ -315,27 +419,28 @@ function updateRadarItem(sym){
   sel.value = SYMBOL;
   sel.onchange=()=>setActive(sel.value);
 
-  // radar list
-  const ul = el("coinList");
-  ul.innerHTML="";
+  // radar list items
+  coinListEl.innerHTML="";
   for(const c of COINS){
     const li=document.createElement("li");
     li.id="rad_"+c;
     li.onclick=()=>setActive(c);
-    ul.appendChild(li);
-    updateRadarItem(c);
+    coinListEl.appendChild(li);
   }
 
   setStateUI("HOLD");
   setConf(0);
   el("subline").textContent = `Multi-venue: Coinbase + Kraken (via Worker) • ${symShort(SYMBOL)}`;
+  renderRadarAll();
+  renderGoList();
+  updateTimerLine(Date.now());
 })();
 
 function setActive(sym){
   if(!coinState[sym]) return;
   SYMBOL=sym; S=coinState[SYMBOL];
   el("symbolSel").value = SYMBOL;
-  for(const c of COINS) updateRadarItem(c);
+  renderRadarAll();
   el("subline").textContent = `Multi-venue: Coinbase + Kraken (via Worker) • ${symShort(SYMBOL)}`;
   repaintFromMemory();
   log("ACTIVE "+SYMBOL);
@@ -344,46 +449,35 @@ function setActive(sym){
 function setStateUI(st){
   el("state").className = "state " + (st==="GO"?"go":st==="ARM"?"arm":st==="NO-GO"?"nogo":"hold");
   el("state").textContent = st;
-
-  if(st==="GO"){
-    el("signal").textContent = "ENTER WINDOW OPEN";
-  } else if(st==="ARM"){
-    el("signal").textContent = "ARMING";
-  } else if(st==="NO-GO"){
-    el("signal").textContent = "NO";
-  } else {
-    el("signal").textContent = "WAIT";
-  }
+  el("signal").textContent =
+    (st==="GO") ? "ENTER WINDOW OPEN" :
+    (st==="ARM")? "ARMING" :
+    (st==="NO-GO") ? "NO" : "WAIT";
 }
 
 function repaintFromMemory(){
   setStateUI(S.lastState);
   setConf(Math.round(S.confEMA*100));
-
   if(S.merged.samples.length){
     const last = S.merged.samples.at(-1)[1];
     el("price").textContent = "€ " + last.toFixed(6);
-  } else {
-    el("price").textContent = "€ —";
-    el("minP").textContent = "—";
-    el("maxP").textContent = "—";
-  }
+  } else el("price").textContent = "€ —";
   updateTimerLine(Date.now());
   drawChart(Date.now());
 }
 
-/* ===== Data handling ===== */
+/* =========================
+   Data helpers
+========================= */
 function pushSample(buf, t, p, keepSec){
   buf.push([t,p]);
   const keepMs = keepSec*1000;
   while(buf.length && t - buf[0][0] > keepMs) buf.shift();
 }
-
 function priceAtOrBefore(samples, t){
   for(let i=samples.length-1;i>=0;i--) if(samples[i][0] <= t) return samples[i][1];
   return null;
 }
-
 function computeProj(samples, now){
   if(samples.length<2) return null;
   const pNow = samples.at(-1)[1];
@@ -404,14 +498,15 @@ function computeProj(samples, now){
 
   return { pNow, rets, chop };
 }
-
 function resolveRegime(chopRel){
   if(MODE==="calm") return "calm";
   if(MODE==="fast") return "fast";
   return chopRel > 0.0010 ? "fast" : "calm";
 }
 
-/* ===== AXIOM A (strict-ish) per venue ===== */
+/* =========================
+   AXIOM A (per venue)
+========================= */
 function axiomA(proj){
   const vals = proj.rets.filter(x=>x!=null);
   if(vals.length<3) return {verdict:"INCONCLUSIVE",score:0,reason:"warmup"};
@@ -445,7 +540,9 @@ function axiomA(proj){
   return {verdict:"INCONCLUSIVE",score,reason:"mixed"};
 }
 
-/* ===== Combined OPS confidence (requires both venues) ===== */
+/* =========================
+   OPS confidence (requires both venues)
+========================= */
 function opsConfidence(axCb, axKr, projMerged){
   const base = Math.min(axCb.score, axKr.score);
 
@@ -472,7 +569,9 @@ function opsConfidence(axCb, axKr, projMerged){
   return { confRaw, mom, chopRel, chopBad };
 }
 
-/* ===== Decision rules (ARM→GO + invalidation) ===== */
+/* =========================
+   Decision helpers
+========================= */
 function dwellNeeded(prev,next){
   if(prev===next) return 0;
   if(next==="GO") return MIN_DWELL_ENTER_GO_MS;
@@ -481,10 +580,10 @@ function dwellNeeded(prev,next){
   return 2000;
 }
 
-function updateTimerLine(now, details=null){
+function updateTimerLine(now){
   const confPct = Math.round(S.confEMA*100);
   if(now < S.penaltyUntil){
-    el("goTimer").innerHTML = `PENALTY (${Math.ceil((S.penaltyUntil-now)/1000)}s left) • conf ${confPct}%`;
+    el("goTimer").innerHTML = `PENALTY (${Math.ceil((S.penaltyUntil-now)/1000)}s left) • conf ${confPct}%<br>${GO_MSG_HTML}`;
     return;
   }
   if(S.lastState==="GO"){
@@ -493,50 +592,45 @@ function updateTimerLine(now, details=null){
     return;
   }
   if(S.lastState==="ARM"){
-    el("goTimer").innerHTML = `ARMING • conf ${confPct}% • PASS ${Math.floor(S.passStreakMs/1000)}s`;
+    el("goTimer").innerHTML = `ARMING • conf ${confPct}% • PASS ${Math.floor(S.passStreakMs/1000)}s<br>${GO_MSG_HTML}`;
     return;
   }
-  el("goTimer").innerHTML = details ? details : GO_MSG_HTML;
+  el("goTimer").innerHTML = GO_MSG_HTML;
 }
 
-/* ===== Chart + GO overlay ===== */
+/* =========================
+   Chart + GO overlay
+========================= */
 function drawChart(now){
   const c=el("chart"), ctx=c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
 
   const cutoff = now - CHART_W_SEC*1000;
   const pts = S.merged.samples.filter(p=>p[0]>=cutoff);
-  if(pts.length<2){
-    // still show message if empty
-    return;
-  }
+  if(pts.length<2) return;
 
   const vals=pts.map(p=>p[1]);
   const min=Math.min(...vals), max=Math.max(...vals);
   el("minP").textContent="€ "+min.toFixed(6);
   el("maxP").textContent="€ "+max.toFixed(6);
 
-  // helper map t->x and price->y
   const t0 = pts[0][0], t1 = pts.at(-1)[0];
   const dt = Math.max(1, (t1 - t0));
   const px = (t)=> ( (t - t0) / dt ) * c.width;
   const py = (p)=> c.height - ((p - min)/(max-min+1e-9))*c.height;
 
-  // --- overlay: enter windows shading + GO lines ---
   if(OVERLAY_ON){
-    // draw enter window rectangles first (behind price line)
-    // keep only windows that intersect chart interval
-    const w0 = t0, w1 = t1;
-
+    // enter windows shading
+    const w0=t0,w1=t1;
     ctx.save();
     ctx.fillStyle = "rgba(26,143,58,0.08)";
     for(const w of S.winEvents){
-      const a = w.t0, b = w.t1;
+      const a=w.t0,b=w.t1;
       if(b < w0 || a > w1) continue;
       const xa = Math.max(0, Math.min(c.width, px(Math.max(a,w0))));
       const xb = Math.max(0, Math.min(c.width, px(Math.min(b,w1))));
-      const wpx = Math.max(0, xb - xa);
-      if(wpx > 0) ctx.fillRect(xa, 0, wpx, c.height);
+      const wpx = Math.max(0, xb-xa);
+      if(wpx>0) ctx.fillRect(xa, 0, wpx, c.height);
     }
     ctx.restore();
   }
@@ -549,35 +643,22 @@ function drawChart(now){
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   ctx.lineWidth=2;
-  ctx.strokeStyle="#1a8f3a";
+  ctx.strokeStyle= "--" ? "#1a8f3a" : "#1a8f3a";
   ctx.stroke();
 
-  // overlay GO markers on top
   if(OVERLAY_ON){
-    const e0 = t0, e1 = t1;
-    // draw vertical lines + small dot on the line
     ctx.save();
     ctx.strokeStyle = "#1a8f3a";
     ctx.lineWidth = 1;
-
     for(const ev of S.goEvents){
-      if(ev.t < e0 || ev.t > e1) continue;
+      if(ev.t < t0 || ev.t > t1) continue;
       const x = px(ev.t);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,c.height); ctx.stroke();
 
-      // vertical line
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, c.height);
-      ctx.stroke();
-
-      // dot at the event price (clamped)
       const y = py(Math.max(min, Math.min(max, ev.price)));
-      ctx.beginPath();
-      ctx.arc(x, y, 3, 0, Math.PI*2);
-      ctx.fillStyle = "#1a8f3a";
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2);
+      ctx.fillStyle="#1a8f3a"; ctx.fill();
 
-      // small label (GO)
       ctx.font = "10px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
       ctx.fillStyle = "rgba(0,0,0,0.65)";
       ctx.fillText("GO", Math.min(c.width-14, x+3), Math.max(10, y-6));
@@ -586,7 +667,9 @@ function drawChart(now){
   }
 }
 
-/* ===== Radar scoring uses merged buffer ===== */
+/* =========================
+   Radar scoring from merged
+========================= */
 function radarScoreFromMerged(samples, now){
   if(samples.length<18) return 0;
   const p0=samples.at(-1)[1];
@@ -603,13 +686,177 @@ function radarScoreFromMerged(samples, now){
   s += (diff<0.0012)?0.24:(diff<0.0020)?0.12:0;
   return Math.max(0,Math.min(1,s));
 }
+function renderRadarItem(sym){
+  const li = document.getElementById("rad_"+sym);
+  if(!li) return;
+  const m = radarMem[sym];
+  li.classList.toggle("hot", m.score>=HOT);
+  li.classList.toggle("warm", m.score>=WARM);
+  li.classList.toggle("sel", sym===SYMBOL);
+  li.innerHTML = `<b>${symShort(sym)}</b><small>${Math.round(m.score*100)}% ⏱ ${Math.floor(m.warmMs/1000)}s</small>`;
+}
+function renderRadarAll(){
+  for(const c of COINS) renderRadarItem(c);
+}
 
-/* ===== ACTIVE LOOP ===== */
+/* =========================
+   GO list rendering (global)
+========================= */
+function renderGoList(){
+  goListEl.innerHTML = "";
+  // newest first
+  const list = globalGoLog.slice().sort((a,b)=>b.t-a.t).slice(0,120);
+  for(const ev of list){
+    const li=document.createElement("li");
+    li.onclick=()=>setActive(ev.symbol);
+    const tStr = new Date(ev.t).toLocaleTimeString();
+    li.innerHTML =
+      `<b>${symShort(ev.symbol)}</b>`+
+      `<small style="text-align:right">${tStr}</small>`+
+      `<div style="grid-column:1 / span 2; opacity:.75; font-weight:900">€ ${Number(ev.price).toFixed(2)} • conf ${Math.round(ev.conf*100)}% • ${ev.regime}/${ev.mode}</div>`;
+    goListEl.appendChild(li);
+  }
+}
+
+/* =========================
+   GO record + persistence
+========================= */
+function uid(){
+  return Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+function recordGoEvent(bundle, now){
+  const quote = bundle?.resolved?.quote || "€";
+  const bestVenue = bundle?.best?.venue || "—";
+  const p = (bundle?.best?.price && Number.isFinite(Number(bundle.best.price))) ? Number(bundle.best.price) : (S.merged.samples.at(-1)?.[1] || NaN);
+  if(!Number.isFinite(p)) return;
+
+  const id = uid();
+  const ev = {
+    id,
+    t: now,
+    symbol: SYMBOL,
+    price: p,
+    quote,
+    bestVenue,
+    mode: MODE,
+    regime: REGIME,
+    conf: S.confEMA,
+    passStreakSec: Math.floor(S.passStreakMs/1000),
+    venues: "PASS/PASS",
+    penaltyTriggered: false
+  };
+
+  S.goEvents.push(ev);
+  S.winEvents.push({ t0: now, t1: now + ENTER_WINDOW_MS, id });
+
+  if(S.goEvents.length > S.maxEvents) S.goEvents.splice(0, S.goEvents.length - S.maxEvents);
+  if(S.winEvents.length > S.maxEvents) S.winEvents.splice(0, S.winEvents.length - S.maxEvents);
+
+  globalGoLog.push(ev);
+  globalGoLog = globalGoLog.slice(-500);
+  saveGoLog();
+  renderGoList();
+
+  log(`GO ${symShort(SYMBOL)} €${p.toFixed(2)} conf=${Math.round(S.confEMA*100)}% ${REGIME}/${MODE}`);
+}
+
+/* If a false-go penalty triggers, mark the last GO in this coin (and global) */
+function markPenaltyTriggeredForLastGo(now){
+  // last in coin
+  const last = S.goEvents.length ? S.goEvents[S.goEvents.length-1] : null;
+  if(last && (now - last.t) < FALSE_GO_WINDOW_MS + 2000){
+    last.penaltyTriggered = true;
+  }
+  // last in global with same id
+  if(last){
+    const idx = globalGoLog.findIndex(x=>x.id===last.id);
+    if(idx>=0) globalGoLog[idx].penaltyTriggered = true;
+    saveGoLog();
+    renderGoList();
+  }
+}
+
+/* =========================
+   Export (CSV + JSON) with outcomes
+========================= */
+function sampleAtOrAfter(samples, t){
+  for(let i=0;i<samples.length;i++) if(samples[i][0] >= t) return samples[i][1];
+  return null;
+}
+function outcomeForEvent(ev){
+  const cs = coinState[ev.symbol];
+  const samples = cs.merged.samples;
+  const t0 = ev.t;
+
+  const p30  = sampleAtOrAfter(samples, t0 + 30*1000);
+  const p60  = sampleAtOrAfter(samples, t0 + 60*1000);
+  const p120 = sampleAtOrAfter(samples, t0 + 120*1000);
+
+  // max/min in 2 minutes after GO (if we have coverage)
+  let max2 = null, min2 = null;
+  for(const [t,p] of samples){
+    if(t < t0) continue;
+    if(t > t0 + 120*1000) break;
+    max2 = (max2==null)?p:Math.max(max2,p);
+    min2 = (min2==null)?p:Math.min(min2,p);
+  }
+
+  return {
+    price_after_30s:  p30,
+    price_after_60s:  p60,
+    price_after_120s: p120,
+    max_price_2m: max2,
+    min_price_2m: min2
+  };
+}
+function downloadBlob(text, name, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text],{type}));
+  a.download = name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function exportJSON(){
+  const rows = globalGoLog
+    .slice().sort((a,b)=>a.t-b.t)
+    .map(ev=>({ ...ev, timeISO:new Date(ev.t).toISOString(), ...outcomeForEvent(ev) }));
+  downloadBlob(JSON.stringify(rows,null,2), `sintelia_go_audit_${Date.now()}.json`, "application/json");
+}
+function exportCSV(){
+  const rows = globalGoLog
+    .slice().sort((a,b)=>a.t-b.t)
+    .map(ev=>({ ...ev, timeISO:new Date(ev.t).toISOString(), ...outcomeForEvent(ev) }));
+
+  const headers = [
+    "timeISO","symbol","price","conf","mode","regime","passStreakSec","venues","bestVenue","quote",
+    "price_after_30s","price_after_60s","price_after_120s","max_price_2m","min_price_2m",
+    "penaltyTriggered"
+  ];
+  let csv = headers.join(",") + "\n";
+  for(const r of rows){
+    const vals = headers.map(k=>{
+      const v = r[k];
+      if(v==null || Number.isNaN(v)) return "";
+      if(typeof v === "number") return String(v);
+      return `"${String(v).replaceAll('"','""')}"`;
+    });
+    csv += vals.join(",") + "\n";
+  }
+  downloadBlob(csv, `sintelia_go_audit_${Date.now()}.csv`, "text/csv");
+}
+el("btnExportJSON").onclick=()=>exportJSON();
+el("btnExportCSV").onclick=()=>exportCSV();
+
+/* =========================
+   Main loop
+========================= */
 async function pollActive(){
   const now = Date.now();
   try{
     const bundle = await fetchBundle(SYMBOL);
     setConn("LIVE");
+    el("health").textContent = "health: OK";
+
     S.lastGood = now;
 
     const cb = bundle.venues?.coinbase;
@@ -625,7 +872,7 @@ async function pollActive(){
     const q = bundle.resolved?.quote || "€";
     el("price").textContent = `${q} ${best?.price ? Number(best.price).toFixed(6) : "—"}`;
     el("priceMeta").textContent =
-      `Resolved: ${bundle.resolved?.base}-${bundle.resolved?.quote} • best=${best?.venue || "—"} • cb=${cb?.ok?"ok":"—"} • kr=${kr?.ok?"ok":"—"}`;
+      `Resolved: ${bundle.resolved?.base||"—"}-${bundle.resolved?.quote||"—"} • best=${best?.venue || "—"} • cb=${cb?.ok?"ok":"—"} • kr=${kr?.ok?"ok":"—"}`;
 
     const haveBoth = !!(cb?.ok && kr?.ok);
 
@@ -635,6 +882,8 @@ async function pollActive(){
 
     if(!projM){
       el("diag").innerHTML = `<span class="err">warming up…</span>`;
+      updateTimerLine(now);
+      drawChart(now);
       return;
     }
 
@@ -645,10 +894,10 @@ async function pollActive(){
     if(!haveBoth || !projCb || !projKr){
       el("agreePill").textContent = `VENUES: waiting (need BOTH)`;
       el("axiomPill").textContent = `AXIOM A: —`;
-      drawChart(now);
-      updateTimerLine(now, `Need both venues (Coinbase+Kraken) to ARM/GO.<br>${GO_MSG_HTML}`);
-      el("diag").innerHTML = `<span class="ok">OK</span> API=${API}`;
       setStateUI("HOLD");
+      updateTimerLine(now);
+      drawChart(now);
+      el("diag").innerHTML = `<span class="ok">OK</span> API=${API}`;
       return;
     }
 
@@ -664,7 +913,7 @@ async function pollActive(){
     el("axiomPill").textContent = `AXIOM A: CB=${axCb.verdict} • KR=${axKr.verdict}`;
 
     // persistence: only counts when PASS/PASS
-    if(axCb.verdict==="PASS" && axKr.verdict==="PASS") S.passStreakMs += POLL_MS;
+    if(agree==="PASS/PASS") S.passStreakMs += POLL_MS;
     else S.passStreakMs = 0;
 
     const ops = opsConfidence(axCb, axKr, projM);
@@ -680,7 +929,7 @@ async function pollActive(){
 
     setConf(Math.round(S.confEMA*100));
 
-    // Decision: venue agreement required
+    // Decision
     let next = "HOLD";
     if(agree==="DISAGREE") next="NO-GO";
     else if(agree==="PASS/PASS") {
@@ -707,6 +956,7 @@ async function pollActive(){
       const dur = S.goEnteredAt ? (now - S.goEnteredAt) : 999999;
       if(dur < FALSE_GO_WINDOW_MS){
         S.penaltyUntil = now + PENALTY_MS;
+        markPenaltyTriggeredForLastGo(now);
         log(`FALSE-GO ${symShort(SYMBOL)} dur=${Math.floor(dur/1000)}s → penalty ${Math.floor(PENALTY_MS/1000)}s`);
       }
     }
@@ -719,28 +969,15 @@ async function pollActive(){
 
       if(next==="GO"){
         S.goStart=now; S.goEnteredAt=now;
-        // record GO event (for overlay)
-        const quote = bundle.resolved?.quote || "—";
-        const bestVenue = bundle.best?.venue || "—";
-        const p = (bundle.best?.price && Number.isFinite(Number(bundle.best.price))) ? Number(bundle.best.price) : (S.merged.samples.at(-1)?.[1] || NaN);
 
-        if(Number.isFinite(p)){
-          S.goEvents.push({ t: now, price: p, quote, bestVenue });
-          S.winEvents.push({ t0: now, t1: now + ENTER_WINDOW_MS });
-          // trim
-          if(S.goEvents.length > S.maxEvents) S.goEvents.splice(0, S.goEvents.length - S.maxEvents);
-          if(S.winEvents.length > S.maxEvents) S.winEvents.splice(0, S.winEvents.length - S.maxEvents);
-        }
+        // ✅ CLEAN: record GO ONLY on real transition into GO (no random, no dummy)
+        recordGoEvent(bundle, now);
 
-        log(`GO ${symShort(SYMBOL)} conf=${Math.round(S.confEMA*100)}%`);
       } else {
         S.goStart=null; S.goEnteredAt=null;
       }
 
-      // optional: record invalidation/exit in logs only
-      if(prev==="GO" && next!=="GO"){
-        log(`GO EXIT → ${next} (${symShort(SYMBOL)})`);
-      }
+      if(prev==="GO" && next!=="GO") log(`GO EXIT → ${next} (${symShort(SYMBOL)})`);
     }
 
     setStateUI(S.lastState);
@@ -757,20 +994,24 @@ async function pollActive(){
     el("streakK").textContent = "PASS/PASS persistence";
 
     drawChart(now);
+
     el("diag").innerHTML = `<span class="ok">OK</span> API=${API}`;
 
   }catch(e){
-    el("diag").innerHTML = `<span class="err">${String(e).slice(0,200)}</span><br><small>API=${API}</small>`;
+    el("diag").innerHTML = `<span class="err">${String(e).slice(0,220)}</span><br><small>API=${API}</small>`;
+    el("health").textContent = "health: —";
     if(Date.now() - S.lastGood > 4000) setConn("CONNECT");
+    if(!QUIET) log("err: "+String(e).slice(0,160));
   }
 }
 
-/* ===== SCAN LOOP (Radar) ===== */
+/* =========================
+   Scan loop (Radar + background merge buffers)
+========================= */
 async function pollScan(){
   if(!SCAN) return;
   const now = Date.now();
 
-  // scan sequentially for stability & low load
   for(const sym of COINS){
     try{
       const bundle = await fetchBundle(sym);
@@ -778,7 +1019,7 @@ async function pollScan(){
       if(best?.price){
         const cs = coinState[sym];
 
-        // keep a merged buffer even while not active (so click isn't empty)
+        // keep a merged buffer even while not active (so clicking isn't empty)
         pushSample(cs.merged.samples, now, best.price, KEEP_SEC);
 
         const score = radarScoreFromMerged(cs.merged.samples, now);
@@ -790,27 +1031,44 @@ async function pollScan(){
         if(score >= WARM) m.warmMs += dt;
         else m.warmMs = 0;
 
-        updateRadarItem(sym);
+        renderRadarItem(sym);
       } else {
         const m = radarMem[sym];
         m.score = 0; m.warmMs = 0; m.lastTick = now;
-        updateRadarItem(sym);
+        renderRadarItem(sym);
       }
     }catch{
       const m = radarMem[sym];
       m.score = 0; m.warmMs = 0; m.lastTick = now;
-      updateRadarItem(sym);
+      renderRadarItem(sym);
     }
   }
 }
 
-/* ===== BOOT ===== */
-setConn("CONNECTING");
-log("boot");
-updateTimerLine(Date.now()); // show message baseline
-setInterval(pollActive, POLL_MS);
-setInterval(pollScan, SCAN_TICK_MS);
-pollActive();
+/* =========================
+   Boot
+========================= */
+(function boot(){
+  // Radar DOM nodes
+  coinListEl.innerHTML = "";
+  for(const c of COINS){
+    const li=document.createElement("li");
+    li.id="rad_"+c;
+    li.onclick=()=>setActive(c);
+    coinListEl.appendChild(li);
+  }
+  renderRadarAll();
+
+  // restore global go log into UI
+  renderGoList();
+
+  setConn("CONNECTING");
+  log("boot • API="+API);
+  updateTimerLine(Date.now());
+  setInterval(pollActive, POLL_MS);
+  setInterval(pollScan, SCAN_TICK_MS);
+  pollActive();
+})();
 </script>
 </body>
 </html>

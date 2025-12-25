@@ -1,182 +1,35 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SINTELIA Pulse — DOGE/EUR</title>
+export default {
+  async fetch(req) {
+    const url = new URL(req.url);
+    const symbol = url.searchParams.get("symbol") || "BTC-EUR";
 
-<style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
-.wrap{max-width:520px;margin:auto;padding:14px}
-.top{display:flex;justify-content:space-between;align-items:center}
+    const r = await fetch(
+      "https://api.exchange.coinbase.com/products/" + symbol + "/ticker",
+      {
+        headers: {
+          "User-Agent": "SINTELIA",
+          "Accept": "application/json"
+        }
+      }
+    );
 
-.state{
-  font-size:32px;font-weight:800;padding:14px;border-radius:16px;
-  margin-top:12px;text-align:center
-}
-.hold{background:#fff8e6;border:1px solid #f2ddaa}
-.go{background:#e9fbef;border:1px solid #bfeccc}
-.nogo{background:#ffecec;border:1px solid #f0b5b5}
-
-.signal{font-size:20px;font-weight:700;text-align:center;margin-top:6px}
-.timer{text-align:center;font-size:13px;opacity:.6;margin-top:4px}
-
-.card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
-
-.bar{height:12px;background:#eee;border-radius:8px;overflow:hidden;margin-top:6px;position:relative}
-.fill{height:100%;width:0%;background:#1a8f3a;transition:width .3s}
-.confText{
-  position:absolute;top:-18px;right:0;font-size:12px;opacity:.7
-}
-
-.mode{text-align:center;margin-top:10px}
-button{padding:6px 12px;border-radius:10px;border:1px solid #ccc;background:#fafafa}
-
-pre{
-  font-size:11px;background:#fafafa;border:1px solid #eee;
-  padding:10px;border-radius:12px;max-height:240px;overflow:auto
-}
-</style>
-</head>
-
-<body>
-<div class="wrap">
-  <div class="top">
-    <div><b>SINTELIA Pulse</b><br><small>DOGE / EUR</small></div>
-    <div id="conn">CONNECTING</div>
-  </div>
-
-  <div id="state" class="state hold">HOLD</div>
-  <div id="signal" class="signal">→ WAIT</div>
-  <div id="goTimer" class="timer"></div>
-
-  <div class="card">
-    <div><b id="price">€ —</b></div>
-
-    <div class="bar">
-      <div id="confFill" class="fill"></div>
-      <div id="confText" class="confText">0%</div>
-    </div>
-    <small>Confidence</small>
-
-    <div class="mode">
-      Mode:
-      <button onclick="setMode('calm')">Calm</button>
-      <button onclick="setMode('fast')">Fast</button>
-      <div id="modeLabel">calm</div>
-    </div>
-
-    <details open style="margin-top:10px">
-      <summary>Log</summary>
-      <pre id="log"></pre>
-    </details>
-  </div>
-</div>
-
-<script>
-"use strict";
-
-/* ===== CONFIG ===== */
-const API = "https://patient-hill-56b3.fuffy1603.workers.dev/";
-let MODE = "calm";
-
-/* ===== STATE ===== */
-let prices = [];
-let lastState = "HOLD";
-let lastChange = 0;
-let goStart = null;
-
-/* ===== UI ===== */
-const el = id => document.getElementById(id);
-const logEl = el("log");
-
-function log(t){
-  const ts = new Date().toISOString().slice(11,19);
-  logEl.textContent += `[${ts}] ${t}\n`;
-  logEl.scrollTop = logEl.scrollHeight;
-}
-
-function setState(s){
-  el("state").className = "state " + (s==="GO"?"go":s==="NO-GO"?"nogo":"hold");
-  el("state").textContent = s;
-
-  if(s==="GO"){ el("signal").textContent="↑ BUY"; el("signal").style.color="#1a8f3a"; }
-  else if(s==="NO-GO"){ el("signal").textContent="↓ NO"; el("signal").style.color="#c0352b"; }
-  else{ el("signal").textContent="→ WAIT"; el("signal").style.color="#777"; }
-}
-
-function setMode(m){
-  MODE = m;
-  el("modeLabel").textContent = m;
-  log("mode=" + m);
-}
-
-/* ===== OPS ENGINE ===== */
-function ops(price){
-  const now = Date.now();
-  prices.push([now, price]);
-
-  const W = MODE==="fast" ? 30 : 60;
-  while(prices.length && now - prices[0][0] > W*1000) prices.shift();
-  if(prices.length < 6) return {state:"HOLD", conf:0};
-
-  const p0 = prices[0][1];
-  const p1 = prices[prices.length-1][1];
-  const ret = (p1 - p0) / p0;
-
-  let vol = 0;
-  for(let i=1;i<prices.length;i++) vol += Math.abs(prices[i][1]-prices[i-1][1]);
-  vol /= prices.length;
-
-  const retThr = MODE==="fast" ? 0.0005 : 0.0007;
-  const noiseThr = p1 * (MODE==="fast" ? 0.001 : 0.0008);
-
-  let conf = Math.max(0, Math.min(1, (ret/retThr)*(1 - vol/noiseThr)));
-
-  if(ret > retThr && vol < noiseThr) return {state:"GO", conf};
-  if(ret < -retThr) return {state:"NO-GO", conf:0};
-  return {state:"HOLD", conf};
-}
-
-/* ===== POLL ===== */
-async function poll(){
-  try{
-    const r = await fetch(API, {cache:"no-store"});
-    const d = await r.json();
-    const price = Number(d.price);
-    if(!Number.isFinite(price)) throw "bad price";
-
-    el("price").textContent = "€ " + price.toFixed(6);
-    el("conn").textContent = "LIVE";
-
-    const out = ops(price);
-    let s = out.state;
-    const now = Date.now();
-
-    if(s !== lastState && now - lastChange < 8000) s = lastState;
-    if(s !== lastState){ lastState = s; lastChange = now; }
-
-    setState(s);
-
-    if(s==="GO"){
-      if(!goStart) goStart = now;
-      el("goTimer").textContent = `GO for ${Math.floor((now-goStart)/1000)}s`;
-    }else{
-      goStart = null;
-      el("goTimer").textContent = "";
+    if(!r.ok){
+      return new Response(JSON.stringify({error:"bad symbol"}),{status:500});
     }
 
-    const pct = Math.round(out.conf * 100);
-    el("confFill").style.width = pct + "%";
-    el("confText").textContent = pct + "%";
+    const j = await r.json();
 
-  }catch(e){
-    el("conn").textContent = "RECONNECTING";
+    return new Response(
+      JSON.stringify({
+        price: Number(j.price),
+        time: j.time
+      }),
+      {
+        headers:{
+          "Content-Type":"application/json",
+          "Access-Control-Allow-Origin":"*"
+        }
+      }
+    );
   }
-}
-
-setInterval(poll, 1000);
-poll();
-</script>
-</body>
-</html>
+};

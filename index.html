@@ -74,7 +74,7 @@ function setConn(t){
 }
 
 // ---------- OPS v1 (minimal, real) ----------
-const W = 30;          // seconds window
+const W = 60;          // seconds window
 const prices = [];     // [t, price]
 
 function ops(price){
@@ -99,7 +99,7 @@ function ops(price){
   vol /= prices.length;
 
   // conservative thresholds
-  const goRet = 0.001;               // +0.10% over window
+  const goRet = 0.0007;  // +0.07%
   const maxNoise = p1 * 0.0008;      // noise must be small vs price
 
   if (ret > goRet && vol < maxNoise) return { state: "GO", ret, vol };

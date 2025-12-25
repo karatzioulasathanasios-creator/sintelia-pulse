@@ -81,6 +81,19 @@ function setState(s){
 function setConn(t){
   document.getElementById("conn").textContent = t;
 }
+function setSignal(state){
+  const el = document.getElementById("signal");
+  if (state === "GO") {
+    el.textContent = "↑ BUY";
+    el.style.color = "#1a8f3a";
+  } else if (state === "NO-GO") {
+    el.textContent = "↓ NO";
+    el.style.color = "#c0352b";
+  } else {
+    el.textContent = "→ WAIT";
+    el.style.color = "#777";
+  }
+}
 
 // ---------- OPS v1 (minimal, real) ----------
 const W = 60;          // seconds window

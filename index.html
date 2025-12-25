@@ -51,13 +51,7 @@ pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-
 </div>
 
 <script>
-const WS_URL = "wss://server-relay--fuffy1603.replit.app/";
-
-let ws;
-
-function log(t){
-  document.getElementById("log").textContent += t + "\n";
-}
+const API = "https://server-relay--fuffy1603.replit.app/tick";
 
 function setState(s){
   const el = document.getElementById("state");
@@ -65,50 +59,26 @@ function setState(s){
   el.textContent = s;
 }
 
-function connect(){
-  ws = new WebSocket(WS_URL);
+async function poll(){
+  try{
+    const r = await fetch(API, { cache: "no-store" });
+    const d = await r.json();
+    if(!d || d.price == null) throw 0;
 
-  ws.onopen = () => {
     document.getElementById("conn").textContent = "LIVE";
-    log("[WS] connected");
-  };
+    document.getElementById("price").textContent =
+      "€ " + Number(d.price).toFixed(6);
+    document.getElementById("spread").textContent =
+      "spread " + Number(d.spread).toFixed(6);
 
-  ws.onmessage = e => {
-    let msg;
-    try { msg = JSON.parse(e.data); } catch { return; }
-
-    if(msg.type === "tick"){
-      const d = msg.data;
-      if(!d || d.price == null) return;
-
-      document.getElementById("conn").textContent = "LIVE";
-      document.getElementById("price").textContent =
-        "€ " + Number(d.price).toFixed(6);
-
-      document.getElementById("spread").textContent =
-        "spread " + Number(d.spread).toFixed(6);
-
-      // placeholders (OPS engine comes next)
-      document.getElementById("zs").textContent = "•";
-      document.getElementById("zr").textContent = "•";
-      document.getElementById("zv").textContent = "•";
-
-      setState("HOLD");
-    }
-  };
-
-  ws.onclose = () => {
+    setState("HOLD");
+  }catch{
     document.getElementById("conn").textContent = "RECONNECTING";
-    log("[WS] reconnecting…");
-    setTimeout(connect, 1500);
-  };
-
-  ws.onerror = () => {
-    document.getElementById("conn").textContent = "ERROR";
-  };
+  }
 }
 
-connect();
+setInterval(poll, 1000);
 </script>
+
 </body>
 </html>

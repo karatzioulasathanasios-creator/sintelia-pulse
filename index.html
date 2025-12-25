@@ -20,7 +20,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helve
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
 .box{border:1px solid #eee;border-radius:12px;padding:10px}
 small{opacity:.6}
-pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px}
+pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:260px;overflow:auto}
 </style>
 </head>
 
@@ -43,7 +43,7 @@ pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-
       <div class="box">Volume z<br><b id="zv">•</b></div>
     </div>
 
-    <details style="margin-top:10px">
+    <details style="margin-top:10px" open>
       <summary>Details</summary>
       <pre id="log"></pre>
     </details>
@@ -51,7 +51,13 @@ pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-
 </div>
 
 <script>
-const API = "https://server-relay--fuffy1603.replit.app";
+const API = "https://server-relay--fuffy1603.replit.app/tick";
+
+function log(t){
+  const el = document.getElementById("log");
+  el.textContent += t + "\n";
+  el.scrollTop = el.scrollHeight;
+}
 
 function setState(s){
   const el = document.getElementById("state");
@@ -63,7 +69,10 @@ async function poll(){
   try{
     const r = await fetch(API, { cache: "no-store" });
     const d = await r.json();
-    if(!d || d.price == null) throw 0;
+
+    if(!d || d.price == null){
+      throw new Error("no data");
+    }
 
     document.getElementById("conn").textContent = "LIVE";
     document.getElementById("price").textContent =
@@ -71,14 +80,18 @@ async function poll(){
     document.getElementById("spread").textContent =
       "spread " + Number(d.spread).toFixed(6);
 
+    // OPS engine comes next – for now stay HOLD
     setState("HOLD");
-  }catch{
+
+  }catch(e){
     document.getElementById("conn").textContent = "RECONNECTING";
   }
 }
 
+// poll once per second
 setInterval(poll, 1000);
+poll();
 </script>
-
 </body>
 </html>
+

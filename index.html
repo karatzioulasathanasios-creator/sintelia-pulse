@@ -80,7 +80,9 @@ async function poll(){
       "spread " + Number(d.spread).toFixed(6);
 
     // OPS engine comes next – for now stay HOLD
-    setState("HOLD");
+    const s = ops(d.price);
+setState(s);
+
 
   }catch(e){
     document.getElementById("conn").textContent = "RECONNECTING";
@@ -90,6 +92,37 @@ async function poll(){
 // poll once per second
 setInterval(poll, 1000);
 poll();
+  // --- OPS v1 ---
+const W = 30;          // seconds window
+const prices = [];
+
+function ops(price){
+  const now = Date.now();
+  prices.push([now, price]);
+
+  // keep window
+  while (prices.length && now - prices[0][0] > W*1000) {
+    prices.shift();
+  }
+
+  if (prices.length < 5) return "HOLD";
+
+  const p0 = prices[0][1];
+  const p1 = prices[prices.length - 1][1];
+  const ret = (p1 - p0) / p0;
+
+  let vol = 0;
+  for (let i = 1; i < prices.length; i++) {
+    vol += Math.abs(prices[i][1] - prices[i-1][1]);
+  }
+  vol /= prices.length;
+
+  // thresholds (very conservative)
+  if (ret > 0.001 && vol < p1 * 0.0008) return "GO";
+  if (ret < -0.001) return "NO-GO";
+  return "HOLD";
+}
+
 </script>
 </body>
 </html>

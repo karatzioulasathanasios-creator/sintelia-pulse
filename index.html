@@ -9,18 +9,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
-.wrap{max-width:520px;margin:auto;padding:14px}
-.top{display:flex;justify-content:space-between;align-items:center}
-.state{font-size:34px;font-weight:800;padding:14px;border-radius:16px;margin-top:14px}
-.hold{background:#fff8e6;border:1px solid #f2ddaa}
-.go{background:#e9fbef;border:1px solid #bfeccc}
-.nogo{background:#ffecec;border:1px solid #f0b5b5}
-.card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-.box{border:1px solid #eee;border-radius:12px;padding:10px}
-small{opacity:.6}
-pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:260px;overflow:auto}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;background:#fff;color:#111}
+  .wrap{max-width:520px;margin:auto;padding:14px}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .state{font-size:34px;font-weight:800;padding:14px;border-radius:16px;margin-top:14px}
+  .hold{background:#fff8e6;border:1px solid #f2ddaa}
+  .go{background:#e9fbef;border:1px solid #bfeccc}
+  .nogo{background:#ffecec;border:1px solid #f0b5b5}
+  .card{border:1px solid #eee;border-radius:16px;padding:14px;margin-top:12px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+  .box{border:1px solid #eee;border-radius:12px;padding:10px}
+  small{opacity:.6}
+  pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-radius:12px;max-height:260px;overflow:auto}
 </style>
 </head>
 
@@ -51,79 +51,112 @@ pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-
 </div>
 
 <script>
-const API = "https://patient-hill-56b3.fuffy1603.workers.dev";
-function log(t){
+/**
+ * ✅ SET THIS to your Cloudflare Worker URL that returns JSON:
+ * {"price":..., "spread":..., ...}
+ */
+const API = "https://patient-hill-56b3.fuffy1603.workers.dev/";
+
+// ---------- UI helpers ----------
+function logLine(t){
   const el = document.getElementById("log");
-  el.textContent += t + "\n";
+  const ts = new Date().toISOString().slice(11,19);
+  el.textContent += `[${ts}] ${t}\n`;
   el.scrollTop = el.scrollHeight;
 }
-
 function setState(s){
   const el = document.getElementById("state");
   el.className = "state " + (s==="GO"?"go":s==="NO-GO"?"nogo":"hold");
   el.textContent = s;
 }
+function setConn(t){
+  document.getElementById("conn").textContent = t;
+}
+
+// ---------- OPS v1 (minimal, real) ----------
+const W = 30;          // seconds window
+const prices = [];     // [t, price]
+
+function ops(price){
+  const now = Date.now();
+  prices.push([now, price]);
+
+  // keep last W seconds
+  while (prices.length && now - prices[0][0] > W*1000) prices.shift();
+
+  // warm-up
+  if (prices.length < 6) return { state: "HOLD", ret: null, vol: null };
+
+  const p0 = prices[0][1];
+  const p1 = prices[prices.length - 1][1];
+  const ret = (p1 - p0) / p0;
+
+  // simple noise proxy: mean abs step
+  let vol = 0;
+  for (let i = 1; i < prices.length; i++){
+    vol += Math.abs(prices[i][1] - prices[i-1][1]);
+  }
+  vol /= prices.length;
+
+  // conservative thresholds
+  const goRet = 0.001;               // +0.10% over window
+  const maxNoise = p1 * 0.0008;      // noise must be small vs price
+
+  if (ret > goRet && vol < maxNoise) return { state: "GO", ret, vol };
+  if (ret < -goRet)                  return { state: "NO-GO", ret, vol };
+  return { state: "HOLD", ret, vol };
+}
+
+// ---------- Polling ----------
+let lastOk = 0;
 
 async function poll(){
   try{
+    // IMPORTANT: do not assume API is JSON if status not OK
     const r = await fetch(API, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
     const d = await r.json();
 
-    if(!d || d.price == null){
-      throw new Error("no data");
-    }
+    // Validate numeric price
+    const price = Number(d.price);
+    if (!Number.isFinite(price)) throw new Error("bad price");
 
-    document.getElementById("conn").textContent = "LIVE";
-    document.getElementById("price").textContent =
-      "€ " + Number(d.price).toFixed(6);
-    document.getElementById("spread").textContent =
-      "spread " + Number(d.spread).toFixed(6);
+    const spread = Number(d.spread);
+    const spreadOk = Number.isFinite(spread) ? spread : 0;
 
-    // OPS engine comes next – for now stay HOLD
-    const s = ops(d.price);
-setState(s);
+    setConn("LIVE");
+    lastOk = Date.now();
 
+    document.getElementById("price").textContent = "€ " + price.toFixed(6);
+    document.getElementById("spread").textContent = "spread " + spreadOk.toFixed(6);
 
-  }catch(e){
-    document.getElementById("conn").textContent = "RECONNECTING";
+    const out = ops(price);
+    setState(out.state);
+
+    // We haven’t implemented z-scores yet; keep placeholders stable
+    document.getElementById("zs").textContent = "•";
+    document.getElementById("zr").textContent = "•";
+    document.getElementById("zv").textContent = "•";
+
+    // Log compact diagnostics
+    const retTxt = (out.ret==null) ? "warm" : (out.ret*100).toFixed(3) + "%";
+    const volTxt = (out.vol==null) ? "warm" : out.vol.toExponential(2);
+    logLine(`ok price=${price.toFixed(6)} spread=${spreadOk.toFixed(6)} state=${out.state} ret=${retTxt} vol=${volTxt}`);
+
+  } catch(e){
+    // If we were live recently, show RECONNECTING but do not erase last price
+    setConn("RECONNECTING");
+    logLine(`err ${String(e)}`);
+    // keep state as HOLD on errors
+    setState("HOLD");
   }
 }
 
 // poll once per second
 setInterval(poll, 1000);
 poll();
-  // --- OPS v1 ---
-const W = 30;          // seconds window
-const prices = [];
-
-function ops(price){
-  const now = Date.now();
-  prices.push([now, price]);
-
-  // keep window
-  while (prices.length && now - prices[0][0] > W*1000) {
-    prices.shift();
-  }
-
-  if (prices.length < 5) return "HOLD";
-
-  const p0 = prices[0][1];
-  const p1 = prices[prices.length - 1][1];
-  const ret = (p1 - p0) / p0;
-
-  let vol = 0;
-  for (let i = 1; i < prices.length; i++) {
-    vol += Math.abs(prices[i][1] - prices[i-1][1]);
-  }
-  vol /= prices.length;
-
-  // thresholds (very conservative)
-  if (ret > 0.001 && vol < p1 * 0.0008) return "GO";
-  if (ret < -0.001) return "NO-GO";
-  return "HOLD";
-}
-
 </script>
+
 </body>
 </html>
-

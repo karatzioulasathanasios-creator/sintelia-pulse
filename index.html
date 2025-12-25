@@ -126,7 +126,7 @@ async function poll(){
     const spreadOk = Number.isFinite(spread) ? spread : 0;
 
     setConn("LIVE");
-    lastOk = Date.now();
+    lastGood = Date.now();
 
     document.getElementById("price").textContent = "€ " + price.toFixed(6);
     document.getElementById("spread").textContent = "spread " + spreadOk.toFixed(6);
@@ -146,7 +146,10 @@ async function poll(){
 
   } catch(e){
     // If we were live recently, show RECONNECTING but do not erase last price
-    setConn("RECONNECTING");
+    if (Date.now() - lastGood > 5000) {
+  setConn("RECONNECTING");
+}
+
     logLine(`err ${String(e)}`);
     // keep state as HOLD on errors
     setState("HOLD");

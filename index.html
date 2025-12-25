@@ -40,7 +40,17 @@ pre{font-size:11px;background:#fafafa;border:1px solid #eee;padding:10px;border-
   <div class="card">
     <div><b id="price">€ —</b></div>
 
-    <div class="bar"><div id="confFill" class="fill"></div></div>
+    <div class="bar" style="position:relative">
+  <div id="confFill" class="fill"></div>
+  <div id="confText" style="
+    position:absolute;
+    top:-18px;
+    right:0;
+    font-size:12px;
+    opacity:.7;
+  ">0%</div>
+</div>
+
     <small>Confidence</small>
 
     <div class="mode">
@@ -70,6 +80,7 @@ let lastState = "HOLD";
 let lastChange = 0;
 let lastBeep = 0;
 let audioReady = false;
+let goStart = null;
 
 /* ===== AUDIO ===== */
 const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
@@ -87,6 +98,9 @@ function setSignal(s){
   if(s==="GO"){el.textContent="↑ BUY";el.style.color="#1a8f3a";}
   else if(s==="NO-GO"){el.textContent="↓ NO";el.style.color="#c0352b";}
   else{el.textContent="→ WAIT";el.style.color="#777";}
+  <div id="goTimer" style="text-align:center; font-size:13px; opacity:.6; margin-top:4px;">
+</div>
+
 }
 function log(t){
   const el=document.getElementById("log");
@@ -148,10 +162,20 @@ async function poll(){
     if(s!==lastState){lastState=s;lastChange=now;}
 
     setState(s); setSignal(s);
+const gt = document.getElementById("goTimer");
+
+if (s === "GO") {
+  if (!goStart) goStart = Date.now();
+  const secs = Math.floor((Date.now() - goStart) / 1000);
+  gt.textContent = `GO for ${secs}s`;
+} else {
+  goStart = null;
+  gt.textContent = "";
+}
 
     const confPct=Math.round(out.conf*100);
     document.getElementById("confFill").style.width=confPct+"%";
-
+document.getElementById("confText").textContent = confPct + "%";
     if(s==="GO" && audioReady && now-lastBeep>30000){
       audio.play().catch(()=>{});
       lastBeep=now;
